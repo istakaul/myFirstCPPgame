@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <imgui.h>
 #include <rlImGui.h>
+#include <ImGui_Theme/BlackDevil.h>
 
 
 int main()
@@ -26,6 +27,9 @@ int main()
 
 	#pragma region imgui
 		rlImGuiBegin();
+
+		// Apply Black Devil style
+		SetupImGuiStyle();
 
 		// Dock to main game screen / viewport, but before that make it transparent
 		// so that it doesn't cover with gray background the whole screen
@@ -110,7 +114,7 @@ int main()
 		ImGui::SliderFloat("slider", &a, 0, 1);
 
 		ImGui::End();
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 	#pragma endregion
 
 	#pragma region imgui
