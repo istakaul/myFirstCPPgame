@@ -42,6 +42,50 @@ int main()
 		//DrawText("Congrats! You created your first window", 190, 200, 20, {255, 0, 200, 255});
 
 	#pragma region imgui windows
+
+	#pragma region imgui MainMenuBar
+		ImGui::BeginMainMenuBar();
+		if (ImGui::BeginMenu("File")) {
+			ImGui::MenuItem("(demo menu)", NULL, false, false);
+			if (ImGui::MenuItem("New")) {}
+			if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+			if (ImGui::BeginMenu("Open Recent")) {
+				ImGui::MenuItem("fish_hat.c");
+				ImGui::MenuItem("fish_hat.inl");
+				ImGui::MenuItem("fish_hat.h");
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	#pragma endregion
+
+	#pragma region imgui list of checkboxes
+		ImGui::Begin("CheckBoxes!");
+		ImGui::BeginListBox("MyCheckBoxList");
+
+		static bool check1 = true;
+		static bool check2 = false;
+		ImGui::Checkbox("First Check", &check1);
+		ImGui::Checkbox("Second Check", &check2);
+
+		ImGui::EndListBox();
+
+		ImGui::End();
+	#pragma endregion
+
+	#pragma region imgui Tooltip on hover
+		ImGui::Begin("Tooltip");
+		ImGui::Text("Speed");
+		ImGui::SameLine();
+		if (ImGui::IsItemHovered()) {
+			ImGui::BeginTooltip();
+			ImGui::Text("Controls how fast the player moves.");
+			ImGui::EndTooltip();
+		}
+		ImGui::End();
+	#pragma endregion
+
 		ImGui::Begin("test");
 
 		ImGui::Text("hello");
@@ -66,7 +110,7 @@ int main()
 		ImGui::SliderFloat("slider", &a, 0, 1);
 
 		ImGui::End();
-		//ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
 	#pragma endregion
 
 	#pragma region imgui
