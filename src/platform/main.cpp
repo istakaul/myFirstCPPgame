@@ -2,14 +2,21 @@
 #include <raylib.h>
 #include <imgui.h>
 #include <rlImGui.h>
-#include <ImGui_Theme/BlackDevil.h>
+#include <../ImGui_Theme/BlackDevil.h>
+#include <gameMain.h>
 
 
 int main()
 {
-	
+
+#if PRODUCTION_BUILD == 1
+	SetTraceLogLevel(LOG_NONE);
+#endif
+
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(800, 450, "window name");
+	SetExitKey(KEY_NULL); // Disable Esc from closing window
+	SetTargetFPS(240);
 
 #pragma region imgui
 	rlImGuiSetup(true);
@@ -20,6 +27,10 @@ int main()
 	// Scale the output of ImGui
 	io.FontGlobalScale = 2;
 #pragma endregion
+
+	if (!initGame()) {
+		return 0;
+	}
 
 	while (!WindowShouldClose()) { // If I don't press the x button on the window nor the escape key (because WindowShouldClose will be true if one of these happens)
 		BeginDrawing();
@@ -38,12 +49,6 @@ int main()
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 		ImGui::PopStyleColor(2);
 	#pragma endregion
-
-		DrawRectangle(75, 75, 100, 100, { 0,255,0,127 }); // green
-		DrawRectangle(50, 50, 100, 100, { 255,0,0,127 }); // red
-
-		DrawText("Congrats! You created your first window", 190, 200, 20, RED);
-		//DrawText("Congrats! You created your first window", 190, 200, 20, {255, 0, 200, 255});
 
 	#pragma region imgui windows
 
@@ -117,6 +122,10 @@ int main()
 		//ImGui::ShowDemoWindow();
 	#pragma endregion
 
+		if (!updateGame()) {
+			CloseWindow();
+		}
+
 	#pragma region imgui
 		rlImGuiEnd();
 	#pragma endregion
@@ -124,10 +133,13 @@ int main()
 		EndDrawing();
 	}
 
+	CloseWindow(); // this will force the operating system to clear any stuff from memory related (like the openGL context)
+
+	closeGame();
+
 #pragma region imgui
 	rlImGuiShutdown();
 #pragma endregion
-	CloseWindow(); // this will force the operating system to clear any stuff from memory related (like the openGL context)
 
 	return 0;
 }
