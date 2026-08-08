@@ -34,7 +34,7 @@ int main()
 
 	while (!WindowShouldClose()) { // If I don't press the x button on the window nor the escape key (because WindowShouldClose will be true if one of these happens)
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
+		ClearBackground(BLACK);
 
 	#pragma region imgui
 		rlImGuiBegin();
@@ -52,74 +52,74 @@ int main()
 
 	#pragma region imgui windows
 
-	#pragma region imgui MainMenuBar
-		ImGui::BeginMainMenuBar();
-		if (ImGui::BeginMenu("File")) {
-			ImGui::MenuItem("(demo menu)", NULL, false, false);
-			if (ImGui::MenuItem("New")) {}
-			if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-			if (ImGui::BeginMenu("Open Recent")) {
-				ImGui::MenuItem("fish_hat.c");
-				ImGui::MenuItem("fish_hat.inl");
-				ImGui::MenuItem("fish_hat.h");
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenu();
-		}
-		ImGui::EndMainMenuBar();
-	#pragma endregion
+	//#pragma region imgui MainMenuBar
+	//	ImGui::BeginMainMenuBar();
+	//	if (ImGui::BeginMenu("File")) {
+	//		ImGui::MenuItem("(demo menu)", NULL, false, false);
+	//		if (ImGui::MenuItem("New")) {}
+	//		if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+	//		if (ImGui::BeginMenu("Open Recent")) {
+	//			ImGui::MenuItem("fish_hat.c");
+	//			ImGui::MenuItem("fish_hat.inl");
+	//			ImGui::MenuItem("fish_hat.h");
+	//			ImGui::EndMenu();
+	//		}
+	//		ImGui::EndMenu();
+	//	}
+	//	ImGui::EndMainMenuBar();
+	//#pragma endregion
 
-	#pragma region imgui list of checkboxes
-		ImGui::Begin("CheckBoxes!");
-		ImGui::BeginListBox("MyCheckBoxList");
+	//#pragma region imgui list of checkboxes
+	//	ImGui::Begin("CheckBoxes!");
+	//	ImGui::BeginListBox("MyCheckBoxList");
 
-		static bool check1 = true;
-		static bool check2 = false;
-		ImGui::Checkbox("First Check", &check1);
-		ImGui::Checkbox("Second Check", &check2);
+	//	static bool check1 = true;
+	//	static bool check2 = false;
+	//	ImGui::Checkbox("First Check", &check1);
+	//	ImGui::Checkbox("Second Check", &check2);
 
-		ImGui::EndListBox();
+	//	ImGui::EndListBox();
 
-		ImGui::End();
-	#pragma endregion
+	//	ImGui::End();
+	//#pragma endregion
 
-	#pragma region imgui Tooltip on hover
-		ImGui::Begin("Tooltip");
-		ImGui::Text("Speed");
-		ImGui::SameLine();
-		if (ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-			ImGui::Text("Controls how fast the player moves.");
-			ImGui::EndTooltip();
-		}
-		ImGui::End();
-	#pragma endregion
+	//#pragma region imgui Tooltip on hover
+	//	ImGui::Begin("Tooltip");
+	//	ImGui::Text("Speed");
+	//	ImGui::SameLine();
+	//	if (ImGui::IsItemHovered()) {
+	//		ImGui::BeginTooltip();
+	//		ImGui::Text("Controls how fast the player moves.");
+	//		ImGui::EndTooltip();
+	//	}
+	//	ImGui::End();
+	//#pragma endregion
 
-		ImGui::Begin("test");
+	//	ImGui::Begin("test");
 
-		ImGui::Text("hello");
-		//ImGui::Button("button");
+	//	ImGui::Text("hello");
+	//	//ImGui::Button("button");
 
-		if (ImGui::Button("button")) {
-			std::cout << "Text\n";
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Button2")) {
-			std::cout << "Second button \n";
-		}
+	//	if (ImGui::Button("button")) {
+	//		std::cout << "Text\n";
+	//	}
+	//	ImGui::SameLine();
+	//	if (ImGui::Button("Button2")) {
+	//		std::cout << "Second button \n";
+	//	}
 
-		ImGui::End();
+	//	ImGui::End();
 
-		ImGui::Begin("second window");
+	//	ImGui::Begin("second window");
 
-		ImGui::Text("hello");
-		ImGui::Separator();
-		ImGui::NewLine();
-		static float a = 0;
-		ImGui::SliderFloat("slider", &a, 0, 1);
+	//	ImGui::Text("hello");
+	//	ImGui::Separator();
+	//	ImGui::NewLine();
+	//	static float a = 0;
+	//	ImGui::SliderFloat("slider", &a, 0, 1);
 
-		ImGui::End();
-		//ImGui::ShowDemoWindow();
+	//	ImGui::End();
+	//	//ImGui::ShowDemoWindow();
 	#pragma endregion
 
 		if (!updateGame()) {
