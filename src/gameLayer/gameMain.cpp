@@ -4,9 +4,10 @@
 #include <fstream>
 #include <asserts.h>
 #include <assetManager.h>
+#include <gameMap.h>
 
 struct GameData {
-
+	GameMap gameMap;
 } gameData;
 
 AssetManager assetManager;
@@ -15,26 +16,45 @@ bool initGame()
 {
 	assetManager.loadAll();
 
+	gameData.gameMap.create(30, 10);
+
+	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+
 	return true;
 }
 
 bool updateGame()
 {
-/*
-TODO: delete the following region
-*/
-#pragma region imgui Draw Example
-	//DrawRectangle(75, 75, 100, 100, { 0,255,0,127 }); // green
-	//DrawRectangle(50, 50, 100, 100, { 255,0,0,127 }); // red
-
-	//DrawText("Congrats! You created your first window", 190, 200, 20, RED);
-	//DrawText("Congrats! You created your first window", 190, 200, 20, {255, 0, 200, 255});
-#pragma endregion
-
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 1.f / 5) { deltaTime = 1.f / 5; } // limit deltaTime to a maximum of 1/5 seconds (200ms) to avoid large jumps
 
-	DrawTexturePro(assetManager.dirt, { 0,0,(float)assetManager.dirt.width, (float)assetManager.dirt.height }, { 50,50, 100, 100 }, { 0,0 }, 0, WHITE);
+	ClearBackground({ 75, 75, 150, 255 }); // clear the screen with a dark green color
+	
+	for (int y = 0; y < gameData.gameMap.h; y++) {
+		for (int x = 0; x < gameData.gameMap.w; x++) {
+
+			auto &b = gameData.gameMap.getBlockUnsafe(x, y);
+
+			if (b.type != Block::air) {
+				float size = 32;
+				float posX = x * size;
+				float posY = y * size;
+
+				DrawTexturePro(
+					assetManager.dirt,
+					Rectangle{ 0, 0, (float)assetManager.dirt.width, (float)assetManager.dirt.height }, // source
+					{ posX, posY, size, size }, // destination
+					{ 0, 0 }, // origin (top-left corner)
+					0.f, // rotation
+					WHITE // tint
+				);
+			}
+		}
+	}
 
 	return true;
 }
