@@ -1,5 +1,7 @@
 #include <raylib.h>
 #include "gameMain.h"
+#include <iostream>
+#include <fstream>
 
 bool initGame()
 {
@@ -19,4 +21,9 @@ bool updateGame()
 
 void closeGame()
 {
+	std::cout << "\n\nCLOSED!!!!!!!!!\n\n";
+
+	std::ofstream f(RESOURCES_PATH "f.txt");
+	f << "\nCLOSED\n";
+	f.close();
 }
