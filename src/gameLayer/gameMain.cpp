@@ -6,6 +6,7 @@
 #include <assetManager.h>
 #include <gameMap.h>
 #include <helpers.h>
+#include <raymath.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -19,13 +20,20 @@ bool initGame()
 	assetManager.loadAll();
 
 	//testMap(2);
-	gameData.gameMap.create(30, 10);
 
-	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
-	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
-	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
-	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+	gameData.gameMap.create(700, 500);
+
+	for (int y = 0; y < 700; y++) {
+		for (int x = 0; x < 500; x++) {
+			gameData.gameMap.getBlockUnsafe(y, x).type = Block::stone;
+		}
+	}
+
+	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
+	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
+	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
+	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
 	gameData.camera.target = { 0.f, 0.f }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
@@ -64,7 +72,15 @@ bool updateGame()
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		if (b) {
-			b->type = Block::gold;
+			if (IsKeyPressed(KEY_ONE)) {
+
+				b->type = Block::boneChest;
+			}
+			else if (IsKeyPressed(KEY_TWO)) {
+
+				b->type = Block::copper;
+
+			}
 		}
 
 	}
@@ -72,9 +88,22 @@ bool updateGame()
 #pragma endregion
 
 	BeginMode2D(gameData.camera);
+
+	Vector2 topLeftView = GetScreenToWorld2D({0,0}, gameData.camera);
+	Vector2 bottomRightView = GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, gameData.camera);
 	
-	for (int y = 0; y < gameData.gameMap.h; y++) {
-		for (int x = 0; x < gameData.gameMap.w; x++) {
+	int startXView = (int)floorf(topLeftView.x-1);
+	int endXView = (int)ceilf(bottomRightView.x+1);
+	int startYView = (int)floorf(topLeftView.y-1);
+	int endYView = (int)ceilf(bottomRightView.y+1);
+
+	startXView = Clamp(startXView, 0, gameData.gameMap.w - 1);
+	endXView = Clamp(endXView, 0, gameData.gameMap.w - 1);
+	startYView = Clamp(startYView, 0, gameData.gameMap.h - 1);
+	endYView = Clamp(endYView, 0, gameData.gameMap.h - 1);
+
+	for (int y = startYView; y <= endYView; y++) {
+		for (int x = startXView; x <= endXView; x++) {
 
 			auto &b = gameData.gameMap.getBlockUnsafe(x, y);
 
@@ -103,6 +132,8 @@ bool updateGame()
 	);
 
 	EndMode2D();
+
+	DrawFPS(10,10);
 
 	return true;
 }
