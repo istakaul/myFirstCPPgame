@@ -62,67 +62,7 @@ bool updateGame()
 	int blockX = (int)floor(worldPos.x);
 	int blockY = (int)floor(worldPos.y);
 
-	if (IsKeyDown(KEY_LEFT_SHIFT) && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-		if (wb) {
-			*wb = {};
-		}
-	}
-
-	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) {
-			*b = {};
-		}
-	}
-
-	if (IsKeyDown(KEY_LEFT_SHIFT)) {
-		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-		if (wb) {
-			if (IsKeyPressed(KEY_ONE)) {
-				wb->type = WallBlock::dirtWall;
-			}
-			else if (IsKeyPressed(KEY_TWO)) {
-
-				wb->type = WallBlock::stoneWall;
-			}
-			else if (IsKeyPressed(KEY_THREE)) {
-
-				wb->type = WallBlock::blueRubyWall;
-			}
-			else if (IsKeyPressed(KEY_FOUR)) {
-
-				wb->type = WallBlock::brickWall;
-			}
-		}
-	}
-
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) {
-			if (IsKeyPressed(KEY_ONE)) {
-
-				b->type = Block::dirt;
-			}
-			else if (IsKeyPressed(KEY_TWO)) {
-
-				b->type = Block::leaves;
-			}
-			else if (IsKeyPressed(KEY_THREE)) {
-
-				b->type = Block::woodLog;
-			}
-			else if (IsKeyPressed(KEY_FOUR)) {
-
-				b->type = Block::icePlatform;
-			}
-			else if (IsKeyPressed(KEY_FIVE)) {
-
-				b->type = Block::platform;
-			}
-		}
-
-	}
+	levelDesignInput(blockX, blockY);
 
 
 #pragma endregion
@@ -216,6 +156,71 @@ bool updateGame()
 	DrawFPS(10,10);
 
 	return true;
+}
+
+void levelDesignInput(int blockX, int blockY)
+{
+	if (IsKeyDown(KEY_LEFT_SHIFT) && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+		if (wb) {
+			*wb = {};
+		}
+	}
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b) {
+			*b = {};
+		}
+	}
+
+	if (IsKeyDown(KEY_LEFT_SHIFT)) {
+		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+		if (wb) {
+			if (IsKeyPressed(KEY_ONE)) {
+				wb->type = WallBlock::dirtWall;
+			}
+			else if (IsKeyPressed(KEY_TWO)) {
+
+				wb->type = WallBlock::stoneWall;
+			}
+			else if (IsKeyPressed(KEY_THREE)) {
+
+				wb->type = WallBlock::blueRubyWall;
+			}
+			else if (IsKeyPressed(KEY_FOUR)) {
+
+				wb->type = WallBlock::brickWall;
+			}
+		}
+	}
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b) {
+			if (IsKeyPressed(KEY_ONE)) {
+
+				b->type = Block::dirt;
+			}
+			else if (IsKeyPressed(KEY_TWO)) {
+
+				b->type = Block::leaves;
+			}
+			else if (IsKeyPressed(KEY_THREE)) {
+
+				b->type = Block::woodLog;
+			}
+			else if (IsKeyPressed(KEY_FOUR)) {
+
+				b->type = Block::icePlatform;
+			}
+			else if (IsKeyPressed(KEY_FIVE)) {
+
+				b->type = Block::platform;
+			}
+		}
+
+	}
 }
 
 void closeGame()
