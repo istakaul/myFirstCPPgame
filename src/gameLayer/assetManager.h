@@ -6,6 +6,8 @@ struct AssetManager {
 	Texture2D dirt = {};
 	Texture2D textures = {};
 	Texture2D frame = {};
+	Texture2D treeTextures = {};
+	Texture2D wallBlockTextures = {};
 
 	void loadAll();
 };

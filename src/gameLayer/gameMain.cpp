@@ -23,17 +23,17 @@ bool initGame()
 
 	gameData.gameMap.create(700, 500);
 
-	for (int y = 0; y < 700; y++) {
-		for (int x = 0; x < 500; x++) {
-			gameData.gameMap.getBlockUnsafe(y, x).type = Block::stone;
-		}
-	}
+	//for (int y = 0; y < 700; y++) {
+	//	for (int x = 0; x < 500; x++) {
+	//		gameData.gameMap.getBlockUnsafe(y, x).type = Block::stone;
+	//	}
+	//}
 
-	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
-	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
-	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
-	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
+	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
+	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
+	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
 	gameData.camera.target = { 0.f, 0.f }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
@@ -62,28 +62,68 @@ bool updateGame()
 	int blockX = (int)floor(worldPos.x);
 	int blockY = (int)floor(worldPos.y);
 
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) {
-			*b = {};
+	if (IsKeyDown(KEY_LEFT_SHIFT) && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+		if (wb) {
+			*wb = {};
 		}
 	}
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		if (b) {
-			if (IsKeyPressed(KEY_ONE)) {
+			*b = {};
+		}
+	}
 
-				b->type = Block::boneChest;
+	if (IsKeyDown(KEY_LEFT_SHIFT)) {
+		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+		if (wb) {
+			if (IsKeyPressed(KEY_ONE)) {
+				wb->type = WallBlock::dirtWall;
 			}
 			else if (IsKeyPressed(KEY_TWO)) {
 
-				b->type = Block::copper;
+				wb->type = WallBlock::stoneWall;
+			}
+			else if (IsKeyPressed(KEY_THREE)) {
 
+				wb->type = WallBlock::blueRubyWall;
+			}
+			else if (IsKeyPressed(KEY_FOUR)) {
+
+				wb->type = WallBlock::brickWall;
+			}
+		}
+	}
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b) {
+			if (IsKeyPressed(KEY_ONE)) {
+
+				b->type = Block::dirt;
+			}
+			else if (IsKeyPressed(KEY_TWO)) {
+
+				b->type = Block::leaves;
+			}
+			else if (IsKeyPressed(KEY_THREE)) {
+
+				b->type = Block::woodLog;
+			}
+			else if (IsKeyPressed(KEY_FOUR)) {
+
+				b->type = Block::icePlatform;
+			}
+			else if (IsKeyPressed(KEY_FIVE)) {
+
+				b->type = Block::platform;
 			}
 		}
 
 	}
+
 
 #pragma endregion
 
@@ -106,13 +146,53 @@ bool updateGame()
 		for (int x = startXView; x <= endXView; x++) {
 
 			auto &b = gameData.gameMap.getBlockUnsafe(x, y);
+			auto &wb = gameData.gameMap.getWallBlockUnsafe(x, y);
+
+			if (wb.type != WallBlock::air) {
+				DrawTexturePro(
+					assetManager.wallBlockTextures,
+					getTextureAtlas(wb.type, 0, 32, 32), // source
+					{ (float)x, (float)y, 1, 1 }, // destination
+					{ 0, 0 }, // origin (top-left corner)
+					0.f, // rotation
+					WHITE // tint
+				);
+			}
+
 
 			if (b.type != Block::air) {
+
 
 				DrawTexturePro(
 					assetManager.textures,
 					getTextureAtlas(b.type, 0, 32, 32), // source
 					{ (float)x, (float)y, 1, 1}, // destination
+					{ 0, 0 }, // origin (top-left corner)
+					0.f, // rotation
+					WHITE // tint
+				);
+			}
+
+			if (gameData.gameMap.getBlockSafe(x, y)->type == Block::woodLog
+				&& gameData.gameMap.getBlockSafe(x, y + 1)->type == Block::dirt) {
+				DrawTexturePro(
+					assetManager.treeTextures,
+					getTextureAtlas(TreeBlock::trunkBottom, 0, 32, 32), // source
+					{ (float)x, (float)y, 1, 1 }, // destination
+					{ 0, 0 }, // origin (top-left corner)
+					0.f, // rotation
+					WHITE // tint
+				);
+			}
+			else if (gameData.gameMap.getBlockSafe(x, y)->type == Block::woodLog
+				&& gameData.gameMap.getBlockSafe(x + 1, y)->type == Block::leaves
+				&& gameData.gameMap.getBlockSafe(x - 1, y)->type == Block::leaves
+				&& gameData.gameMap.getBlockSafe(x, y + 1)->type == Block::woodLog
+				&& gameData.gameMap.getBlockSafe(x, y - 1)->type == Block::leaves) {
+				DrawTexturePro(
+					assetManager.treeTextures,
+					getTextureAtlas(TreeBlock::trunkFolliageAround, 0, 32, 32), // source
+					{ (float)x, (float)y, 1, 1 }, // destination
 					{ 0, 0 }, // origin (top-left corner)
 					0.f, // rotation
 					WHITE // tint
