@@ -4,10 +4,16 @@
 #include <rlImGui.h>
 #include <../ImGui_Theme/BlackDevil.h>
 #include <gameMain.h>
+#include <randomStuff.h>
 
 
 int main()
 {
+	// testing random generator
+	std::ranlux24_base rng(std::random_device{}());
+	for (int i = 0; i < 100; i++) {
+		std::cout << getRandomChance(rng, 0.1) << " ";
+	}
 
 #if PRODUCTION_BUILD == 1
 	SetTraceLogLevel(LOG_NONE);
