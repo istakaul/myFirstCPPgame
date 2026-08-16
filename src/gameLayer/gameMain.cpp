@@ -7,6 +7,7 @@
 #include <gameMap.h>
 #include <helpers.h>
 #include <raymath.h>
+#include "randomStuff.h"
 
 struct GameData {
 	GameMap gameMap;
@@ -29,7 +30,7 @@ bool initGame()
 	//	}
 	//}
 
-	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
 	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
 	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
 	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
@@ -89,9 +90,10 @@ bool updateGame()
 			auto &wb = gameData.gameMap.getWallBlockUnsafe(x, y);
 
 			if (wb.type != WallBlock::air) {
+
 				DrawTexturePro(
 					assetManager.wallBlockTextures,
-					getTextureAtlas(wb.type, 0, 32, 32), // source
+					getTextureAtlas(wb.type, wb.variation, 32, 32), // source
 					{ (float)x, (float)y, 1, 1 }, // destination
 					{ 0, 0 }, // origin (top-left corner)
 					0.f, // rotation
@@ -105,7 +107,7 @@ bool updateGame()
 
 				DrawTexturePro(
 					assetManager.textures,
-					getTextureAtlas(b.type, 0, 32, 32), // source
+					getTextureAtlas(b.type, b.variation, 32, 32), // source
 					{ (float)x, (float)y, 1, 1}, // destination
 					{ 0, 0 }, // origin (top-left corner)
 					0.f, // rotation
@@ -160,6 +162,8 @@ bool updateGame()
 
 void levelDesignInput(int blockX, int blockY)
 {
+	
+
 	if (IsKeyDown(KEY_LEFT_SHIFT) && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
 		if (wb) {
@@ -176,20 +180,29 @@ void levelDesignInput(int blockX, int blockY)
 
 	if (IsKeyDown(KEY_LEFT_SHIFT)) {
 		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+		//std::ranlux24_base rng(std::random_device{}());
+		std::ranlux24_base rng((blockX * blockY) % 4);
+		
 		if (wb) {
 			if (IsKeyPressed(KEY_ONE)) {
+				wb->variation = getRandomInt(rng, 0, 3);
 				wb->type = WallBlock::dirtWall;
+
 			}
 			else if (IsKeyPressed(KEY_TWO)) {
 
+				wb->variation = getRandomInt(rng, 0, 3);
 				wb->type = WallBlock::stoneWall;
+
 			}
 			else if (IsKeyPressed(KEY_THREE)) {
 
+				wb->variation = getRandomInt(rng, 0, 3);
 				wb->type = WallBlock::blueRubyWall;
+
 			}
 			else if (IsKeyPressed(KEY_FOUR)) {
-
+				wb->variation = getRandomInt(rng, 0, 3);
 				wb->type = WallBlock::brickWall;
 			}
 		}
@@ -197,25 +210,33 @@ void levelDesignInput(int blockX, int blockY)
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		std::ranlux24_base rng((blockX * blockY) % 4);
+
 		if (b) {
 			if (IsKeyPressed(KEY_ONE)) {
 
+				b->variation = getRandomInt(rng, 0, 3);
 				b->type = Block::dirt;
+
 			}
 			else if (IsKeyPressed(KEY_TWO)) {
 
+				b->variation = getRandomInt(rng, 0, 3);
 				b->type = Block::leaves;
 			}
 			else if (IsKeyPressed(KEY_THREE)) {
 
+				b->variation = getRandomInt(rng, 0, 3);
 				b->type = Block::woodLog;
 			}
 			else if (IsKeyPressed(KEY_FOUR)) {
 
+				b->variation = getRandomInt(rng, 0, 3);
 				b->type = Block::icePlatform;
 			}
 			else if (IsKeyPressed(KEY_FIVE)) {
 
+				b->variation = getRandomInt(rng, 0, 3);
 				b->type = Block::platform;
 			}
 		}
