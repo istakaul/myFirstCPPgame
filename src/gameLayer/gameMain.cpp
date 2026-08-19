@@ -196,8 +196,13 @@ void levelDesignInput(int blockX, int blockY)
 
 			}
 			else if (IsKeyPressed(KEY_THREE)) {
-
-				wb->variation = getRandomInt(rng, 0, 3);
+				if (getRandomChance(rng, 0.7)) {
+					wb->variation = 3;
+				} 
+				else if (getRandomChance(rng, 0.3)) {
+					wb->variation = 0;
+				}
+				//wb->variation = getRandomInt(rng, 0, 3);
 				wb->type = WallBlock::blueRubyWall;
 
 			}
