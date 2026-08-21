@@ -8,6 +8,10 @@
 #include <helpers.h>
 #include <raymath.h>
 #include "randomStuff.h"
+#include <imgui.h>
+#include <rlImGui.h>
+#include <../ImGui_Theme/BlackDevil.h>
+#include <worldGenerator.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -22,7 +26,8 @@ bool initGame()
 
 	//testMap(2);
 
-	gameData.gameMap.create(700, 500);
+	//gameData.gameMap.create(700, 500);
+	generateWorld(gameData.gameMap, std::random_device{}());
 
 	//for (int y = 0; y < 700; y++) {
 	//	for (int x = 0; x < 500; x++) {
@@ -31,10 +36,10 @@ bool initGame()
 	//}
 
 	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
-	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
-	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
-	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
+	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
+	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
+	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
 	gameData.camera.target = { 0.f, 0.f }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
@@ -53,7 +58,7 @@ bool updateGame()
 	ClearBackground({ 75, 75, 150, 255 }); // clear the screen with a dark green color
 
 #pragma region camera movement
-
+	static float CAMERA_SPEED = 50;
 	if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 7.f * deltaTime;
 	if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 7.f * deltaTime;
 	if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 7.f * deltaTime;
@@ -154,6 +159,13 @@ bool updateGame()
 	);
 
 	EndMode2D();
+
+	ImGui::Begin("Game Control");
+
+	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 10, 150);
+	ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
+
+	ImGui::End();
 
 	DrawFPS(10,10);
 
