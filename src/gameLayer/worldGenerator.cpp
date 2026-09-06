@@ -2,6 +2,7 @@
 #include "randomStuff.h"
 #include <iostream>
 #include <math.h>
+#include <FastNoiseSIMD.h>
 
 void generateWorld(GameMap &gameMap, int seed)
 {
@@ -13,61 +14,33 @@ void generateWorld(GameMap &gameMap, int seed)
 	int stoneSize = 380;
 	int dirtSize = 50;
 
-	std::ranlux24_base rng(seed);
+	std::ranlux24_base rng(seed++);
 
-	int directionDirt = getRandomInt(rng, -2, 2); // -2: down fast, -1: down, 0: straigh, 1: up, 2:up fast
-	int timeToKeepDirectionDirt = getRandomInt(rng, 5, 40);
+	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+	dirtNoiseGenrator->SetSeed(seed++);
+
+	dirtNoiseGenrator->SetFractalType(FastNoiseSIMD::FractalType::FBM);
+	dirtNoiseGenrator->SetFractalOctaves(6);
+	dirtNoiseGenrator->SetFractalGain(0.4f); // lower gain = sharper
+	dirtNoiseGenrator->SetFrequency(0.01f);
+
+	float *dirtNoise = FastNoiseSIMD::GetEmptySet(w);
+
+	dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, w, 1, 1);
+
+	for (int i = 0; i < w; i++) {
+		dirtNoise[i] = (dirtNoise[i] + 1) / 2;
+	}
+
+	int dirtOffsetStart = -5;
+	int dirtOffsetEnd = 35;
 
 	int directionStone = getRandomInt(rng, -2, 2);
 	int timeToKeepDirectionStone = getRandomInt(rng, 5, 40);
 
-	int dirtHeight = 70;
 	int stoneHeight = 90;
 
 	for (int x = 0; x < w; x++) {
-
-		/*Dirt Code------------------------*/
-		timeToKeepDirectionDirt--;
-		if (timeToKeepDirectionDirt <= 0) {
-			timeToKeepDirectionDirt = getRandomInt(rng, 5, 40);
-			directionDirt = getRandomInt(rng, -2, 2);
-		}
-
-		if (directionDirt == -1) {
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight--;
-			}
-		}
-		else if (directionDirt == -2) {
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight--;
-			}
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight--;
-			}
-		}
-		else if (directionDirt == 1) {
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight++;
-			}
-		}
-		else if (directionDirt == 2) {
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight++;
-			}
-			if (getRandomChance(rng, 0.25)) {
-				dirtHeight++;
-			}
-		}
-
-		if (dirtHeight < 50) {
-			dirtHeight = 50;
-		}
-
-		if (dirtHeight > 90) {
-			dirtHeight = 90;
-		}
-		/*--------- End of Dirt code -----------------------*/
 
 		/*----------Stone Code------------------------------*/
 		timeToKeepDirectionStone--;
@@ -113,6 +86,8 @@ void generateWorld(GameMap &gameMap, int seed)
 
 		/*------------------------ End of stone code ------------------------*/
 
+		int dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
+		dirtHeight = stoneHeight - dirtHeight;
 
 		for (int y = 0; y < h; y++) {
 
@@ -138,4 +113,6 @@ void generateWorld(GameMap &gameMap, int seed)
 			gameMap.getBlockUnsafe(x, y) = b;
 		}
 	}
+
+	FastNoiseSIMD::FreeNoiseSet(dirtNoise);
 }
