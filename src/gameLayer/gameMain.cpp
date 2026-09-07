@@ -41,7 +41,7 @@ bool initGame()
 	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
 	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
-	gameData.camera.target = { 0.f, 0.f }; // world-space center of view
+	gameData.camera.target = { 100.0f, 100.0f }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
 	gameData.camera.zoom = 100.f; // no zoom
 
@@ -162,7 +162,7 @@ bool updateGame()
 
 	ImGui::Begin("Game Control");
 
-	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 10, 150);
+	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
 	ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
 
 	ImGui::End();

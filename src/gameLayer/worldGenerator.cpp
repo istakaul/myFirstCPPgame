@@ -16,6 +16,12 @@ void generateWorld(GameMap &gameMap, int seed)
 
 	std::ranlux24_base rng(seed++);
 
+	int desertStart = getRandomInt(rng, 0, w - 210);
+	int desertEnd = desertStart + 100 + getRandomInt(rng, 0, 100);
+	if(desertEnd > w) {
+		desertEnd = w;
+	}
+
 	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
 	dirtNoiseGenrator->SetSeed(seed++);
 
@@ -41,6 +47,21 @@ void generateWorld(GameMap &gameMap, int seed)
 	int stoneHeight = 90;
 
 	for (int x = 0; x < w; x++) {
+
+		bool inDesert = (x >= desertStart && x <= desertEnd);
+
+		int dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
+		dirtHeight = stoneHeight - dirtHeight;
+
+		int dirtType = Block::dirt;
+		int grassType = Block::grassBlock;
+		int stoneType = Block::stone;
+
+		if(inDesert) {
+			dirtType = Block::sand;
+			grassType = Block::sand;
+			stoneType = Block::sandStone;
+		}
 
 		/*----------Stone Code------------------------------*/
 		timeToKeepDirectionStone--;
@@ -86,19 +107,18 @@ void generateWorld(GameMap &gameMap, int seed)
 
 		/*------------------------ End of stone code ------------------------*/
 
-		int dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
-		dirtHeight = stoneHeight - dirtHeight;
+
 
 		for (int y = 0; y < h; y++) {
 
 			Block b;
 
 			if (y > dirtHeight) {
-				b.type = Block::dirt;
+				b.type = dirtType;
 			}
 
 			if (y == dirtHeight) {
-				b.type = Block::grassBlock;
+				b.type = grassType;
 			}
 
 			if (y > stoneHeight) {
@@ -106,6 +126,24 @@ void generateWorld(GameMap &gameMap, int seed)
 					b.type = Block::gold;
 				}
 				else {
+					b.type = stoneType;
+				}
+			}
+
+			if (inDesert) {
+				int desertMid = (desertStart + desertEnd) / 2;
+				int deserthalfWidth = (desertEnd - desertStart) / 2;
+				int distanceFromDesertMid = std::abs(x - desertMid);
+
+				// This gives a value between 0 and 1, where 1 is at the center of the desert and 0 is at the edges
+				float desertDistance = 1.0f - (float)distanceFromDesertMid / deserthalfWidth;
+
+				int desertStoneStart = 10 + stoneHeight;
+				int desertStoneDepth = 20 + stoneHeight; // how deep the desert triangle goes
+
+				int triangleStoneY = desertStoneStart + desertDistance * desertStoneDepth;
+
+				if(y > triangleStoneY) {
 					b.type = Block::stone;
 				}
 			}
