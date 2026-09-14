@@ -23,20 +23,38 @@ void generateWorld(GameMap &gameMap, int seed)
 	}
 
 	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
-	dirtNoiseGenrator->SetSeed(seed++);
+	std::unique_ptr<FastNoiseSIMD> cavesNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
-	dirtNoiseGenrator->SetFractalType(FastNoiseSIMD::FractalType::FBM);
+	dirtNoiseGenrator->SetSeed(seed++);
+	cavesNoiseGenerator->SetSeed(seed++);
+
+	dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
 	dirtNoiseGenrator->SetFractalOctaves(6);
 	dirtNoiseGenrator->SetFractalGain(0.4f); // lower gain = sharper
 	dirtNoiseGenrator->SetFrequency(0.01f);
 
-	float *dirtNoise = FastNoiseSIMD::GetEmptySet(w);
+	cavesNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+	cavesNoiseGenerator->SetFractalOctaves(3);
+	cavesNoiseGenerator->SetFrequency(0.02f);
 
+	float *dirtNoise = FastNoiseSIMD::GetEmptySet(w);
 	dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, w, 1, 1);
 
 	for (int i = 0; i < w; i++) {
 		dirtNoise[i] = (dirtNoise[i] + 1) / 2;
 	}
+
+	float *cavesNoise = FastNoiseSIMD::GetEmptySet(w * h);
+	cavesNoiseGenerator->FillNoiseSet(cavesNoise, 0, 0, 0, h, w, 1); // make sure you flip h, w
+
+	for (int i = 0; i < w * h; i++) {
+		cavesNoise[i] = (cavesNoise[i] + 1) / 2;
+	}
+
+	auto getCaveNoise = [&](int x, int y)
+		{
+			return cavesNoise[x + y * w];
+		};
 
 	int dirtOffsetStart = -5;
 	int dirtOffsetEnd = 35;
@@ -148,9 +166,16 @@ void generateWorld(GameMap &gameMap, int seed)
 				}
 			}
 
+			// bigger more interesting caves
+			// getCaveNoise(x,y) < 0.80 && getCaveNoise(x,y)>0.60
+			if (getCaveNoise(x, y) < 0.30f) { // this means that something like 30% of the world will be covered with caves
+				b.type = Block::air;
+			}
+
 			gameMap.getBlockUnsafe(x, y) = b;
 		}
 	}
 
 	FastNoiseSIMD::FreeNoiseSet(dirtNoise);
+	FastNoiseSIMD::FreeNoiseSet(cavesNoise);
 }
