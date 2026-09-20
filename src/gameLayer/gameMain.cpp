@@ -16,30 +16,22 @@
 struct GameData {
 	GameMap gameMap;
 	Camera2D camera;
+
+	int creativeSelectedBlock = Block::dirt; // this represents the currently selected block
+
 } gameData;
 
 AssetManager assetManager;
+
+static float CAMERA_SPEED = 50;
+
+bool isShowImgui = false;
 
 bool initGame()
 {
 	assetManager.loadAll();
 
-	//testMap(2);
-
-	//gameData.gameMap.create(700, 500);
 	generateWorld(gameData.gameMap, std::random_device{}());
-
-	//for (int y = 0; y < 700; y++) {
-	//	for (int x = 0; x < 500; x++) {
-	//		gameData.gameMap.getBlockUnsafe(y, x).type = Block::stone;
-	//	}
-	//}
-
-	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
-	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
-	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
-	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
 	gameData.camera.target = { 100.0f, 100.0f }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
@@ -57,8 +49,9 @@ bool updateGame()
 
 	ClearBackground({ 75, 75, 150, 255 }); // clear the screen with a dark green color
 
+	if (IsKeyPressed(KEY_F10)) { isShowImgui = !isShowImgui; }
+
 #pragma region camera movement
-	static float CAMERA_SPEED = 50;
 	if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 7.f * deltaTime;
 	if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 7.f * deltaTime;
 	if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 7.f * deltaTime;
@@ -67,6 +60,10 @@ bool updateGame()
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
 	int blockX = (int)floor(worldPos.x);
 	int blockY = (int)floor(worldPos.y);
+
+	// make sure we cannot select an inexistent block
+	if (gameData.creativeSelectedBlock < 0) { gameData.creativeSelectedBlock = 0; }
+	if (gameData.creativeSelectedBlock >= Block::BLOCKS_COUNT) { gameData.creativeSelectedBlock = Block::BLOCKS_COUNT - 1; }
 
 	levelDesignInput(blockX, blockY);
 
@@ -160,12 +157,7 @@ bool updateGame()
 
 	EndMode2D();
 
-	ImGui::Begin("Game Control");
-
-	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
-	ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
-
-	ImGui::End();
+	showImgui(isShowImgui);
 
 	DrawFPS(10,10);
 
@@ -174,90 +166,62 @@ bool updateGame()
 
 void levelDesignInput(int blockX, int blockY)
 {
-	
-
-	if (IsKeyDown(KEY_LEFT_SHIFT) && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-		if (wb) {
-			*wb = {};
+	if (!isShowImgui) {
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				*b = {};
+			}
 		}
-	}
 
-	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) {
-			*b = {};
-		}
-	}
-
-	if (IsKeyDown(KEY_LEFT_SHIFT)) {
-		auto wb = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-		//std::ranlux24_base rng(std::random_device{}());
-		std::ranlux24_base rng((blockX * blockY) % 4);
-		
-		if (wb) {
-			if (IsKeyPressed(KEY_ONE)) {
-				wb->variation = getRandomInt(rng, 0, 3);
-				wb->type = WallBlock::dirtWall;
-
-			}
-			else if (IsKeyPressed(KEY_TWO)) {
-
-				wb->variation = getRandomInt(rng, 0, 3);
-				wb->type = WallBlock::stoneWall;
-
-			}
-			else if (IsKeyPressed(KEY_THREE)) {
-				if (getRandomChance(rng, 0.7)) {
-					wb->variation = 3;
-				} 
-				else if (getRandomChance(rng, 0.3)) {
-					wb->variation = 0;
-				}
-				//wb->variation = getRandomInt(rng, 0, 3);
-				wb->type = WallBlock::blueRubyWall;
-
-			}
-			else if (IsKeyPressed(KEY_FOUR)) {
-				wb->variation = getRandomInt(rng, 0, 3);
-				wb->type = WallBlock::brickWall;
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				b->type = gameData.creativeSelectedBlock;
 			}
 		}
 	}
 
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		std::ranlux24_base rng((blockX * blockY) % 4);
+}
 
-		if (b) {
-			if (IsKeyPressed(KEY_ONE)) {
+void showImgui(bool isShowImgui)
+{
+	if (isShowImgui) {
 
-				b->variation = getRandomInt(rng, 0, 3);
-				b->type = Block::dirt;
+		ImGui::Begin("Game Control");
 
+		ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
+		ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
+
+		ImGui::Separator;
+
+		for (int i = 0; i < Block::BLOCKS_COUNT; i++) {
+			auto atlas = getTextureAtlas(i, 0, 32, 32);
+			atlas.x /= assetManager.textures.width;
+			atlas.width /= assetManager.textures.width;
+			atlas.y /= assetManager.textures.height;
+			atlas.height /= assetManager.textures.height;
+
+			ImGui::PushID(i);
+
+			ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
+			if (ImGui::ImageButton(
+				tex, { 35, 35 }, { atlas.x, atlas.y },
+				{ atlas.x + atlas.width, atlas.y + atlas.height }))
+			{
+				gameData.creativeSelectedBlock = i;
 			}
-			else if (IsKeyPressed(KEY_TWO)) {
 
-				b->variation = getRandomInt(rng, 0, 3);
-				b->type = Block::leaves;
-			}
-			else if (IsKeyPressed(KEY_THREE)) {
+			ImGui::PopID();
 
-				b->variation = getRandomInt(rng, 0, 3);
-				b->type = Block::woodLog;
-			}
-			else if (IsKeyPressed(KEY_FOUR)) {
-
-				b->variation = getRandomInt(rng, 0, 3);
-				b->type = Block::icePlatform;
-			}
-			else if (IsKeyPressed(KEY_FIVE)) {
-
-				b->variation = getRandomInt(rng, 0, 3);
-				b->type = Block::platform;
+			if (i % 10 != 0) {
+				ImGui::SameLine();
 			}
 		}
 
+		ImGui::InputInt("Select Block", &gameData.creativeSelectedBlock);
+
+		ImGui::End();
 	}
 }
 
