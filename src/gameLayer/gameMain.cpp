@@ -193,6 +193,16 @@ void levelDesignInput(int blockX, int blockY)
 			}
 		}
 	}
+	else { // when assets inventory opened
+		if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+			// Copy selected block on map
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				gameData.creativeSelectedBlock = b->type;
+			}
+		}
+	}
+
 
 }
 
