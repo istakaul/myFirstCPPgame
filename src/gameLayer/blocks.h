@@ -66,6 +66,14 @@ struct Block {
 	std::uint16_t type = 0;
 	int variation = 0;
 
+
+	void sanitize()
+	{
+		if (type >= BLOCKS_COUNT) {
+			type = 0;
+		}
+	}
+
 };
 
 struct TreeBlock {
@@ -85,6 +93,13 @@ struct TreeBlock {
 
 	std::uint16_t type = 0;
 	int variation = 0;
+
+	void sanitize()
+	{
+		if (type >= BLOCKS_COUNT) {
+			type = 0;
+		}
+	}
 
 };
 
@@ -116,6 +131,14 @@ struct WallBlock {
 	
 	std::uint16_t type = 0;
 	int variation = 0;
+
+
+	void sanitize()
+	{
+		if (type >= BLOCKS_COUNT) {
+			type = 0;
+		}
+	}
 
 };
 
