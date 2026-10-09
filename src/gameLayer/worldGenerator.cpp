@@ -4,6 +4,8 @@
 #include <math.h>
 #include <FastNoiseSIMD.h>
 #include <algorithm>
+#include <structure.h>
+#include <saveMap.h>
 
 void generateWorld(GameMap &gameMap, int seed)
 {
@@ -22,6 +24,9 @@ void generateWorld(GameMap &gameMap, int seed)
 	if(desertEnd > w) {
 		desertEnd = w;
 	}
+
+	Structure treeStructure;
+	loadBlockDataFromFile(treeStructure.mapData, treeStructure.w, treeStructure.h, RESOURCES_PATH "structures/tree.bin");
 
 	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
 	std::unique_ptr<FastNoiseSIMD> cavesNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -180,7 +185,7 @@ void generateWorld(GameMap &gameMap, int seed)
 	FastNoiseSIMD::FreeNoiseSet(dirtNoise);
 	FastNoiseSIMD::FreeNoiseSet(cavesNoise);
 
-
+#pragma region perlin worms
 	for (int i = 0; i < 20; i++) {
 
 		// pick a random starting point
@@ -244,4 +249,34 @@ void generateWorld(GameMap &gameMap, int seed)
 			radius = std::clamp(radius, 2.2f, 8.5f);
 		}
 	}
+
+#pragma region fill trees
+	for (int x = 0; x < w; x++) {
+		if (getRandomChance(rng, 0.04)) {
+			for (int y = 0; y < h; y++) {
+				auto type = gameMap.getBlockUnsafe(x, y).type;
+				if (type == Block::air) {
+					continue;
+				}
+
+				if (type == Block::grassBlock) {
+					//plant tree
+					Vector2 spawnPos{ float(x), float(y) };
+
+					spawnPos.x -= treeStructure.w / 2;
+					spawnPos.y -= treeStructure.h;
+
+					treeStructure.pasteIntoMap(gameMap, spawnPos);
+
+					x += 3;
+
+					break;
+				}
+				else {
+					break;
+				}
+			}
+		}
+	}
+
 }
