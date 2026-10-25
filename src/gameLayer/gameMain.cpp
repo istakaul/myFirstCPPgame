@@ -14,6 +14,7 @@
 #include <../ImGui_Theme/BlackDevil.h>
 #include <worldGenerator.h>
 #include <saveMap.h>
+#include <physics.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -27,6 +28,8 @@ struct GameData {
 	Structure copyStructure;
 
 	char saveName[100] = {};
+
+	PhysicalEntity player;
 
 } gameData;
 
@@ -42,9 +45,16 @@ bool initGame()
 
 	generateWorld(gameData.gameMap, std::random_device{}());
 
-	gameData.camera.target = { 100.0f, 100.0f }; // world-space center of view
+	gameData.camera.target = { 20.5, 120.5 }; // world-space center of view
 	gameData.camera.rotation = 0.f; // no rotation
 	gameData.camera.zoom = 100.f; // no zoom
+
+	// set the player position
+	gameData.player.teleport({ 20, 120 }); 
+	
+	// set the player size
+	gameData.player.transform.w = 0.9f; // slightly less than a block
+	gameData.player.transform.h = 1.8f; // almost twice the block
 
 	return true;
 }
@@ -61,10 +71,18 @@ bool updateGame()
 	if (IsKeyPressed(KEY_F10)) { isShowImgui = !isShowImgui; }
 
 #pragma region camera movement
-	if(IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 7.f * deltaTime;
-	if(IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 7.f * deltaTime;
-	if(IsKeyDown(KEY_UP)) gameData.camera.target.y -= 7.f * deltaTime;
-	if(IsKeyDown(KEY_DOWN)) gameData.camera.target.y += 7.f * deltaTime;
+	if(IsKeyDown(KEY_LEFT)) gameData.player.getPosition().x -= 7.f * deltaTime;
+	if(IsKeyDown(KEY_RIGHT)) gameData.player.getPosition().x += 7.f * deltaTime;
+	if(IsKeyDown(KEY_UP)) gameData.player.getPosition().y -= 7.f * deltaTime;
+	if(IsKeyDown(KEY_DOWN)) gameData.player.getPosition().y += 7.f * deltaTime;
+
+
+#pragma region entities
+	gameData.player.applyGravity();
+	gameData.player.updateForces(deltaTime);
+	gameData.camera.target = gameData.player.getPosition();
+	gameData.player.updateFinal();
+#pragma endregion
 
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
 	int blockX = (int)floor(worldPos.x);
@@ -192,6 +210,52 @@ bool updateGame()
 			{20, 101, 250, 145});
 
 	}
+
+	//Transform2D test;
+	//test.pos = { 20.5, 120.5 };
+	//test.w = 1;
+	//test.h = 1;
+
+	//Transform2D test2;
+	//test2.pos = worldPos;
+	//test2.w = 1;
+	//test2.h = 1;
+
+
+	//// transform vs transform intersect test
+	//if (test.intersectTransform(test2)) {
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1, GREEN);
+	//	DrawRectangleLinesEx(test2.getAABB(), 0.1, GREEN);
+	//}
+	//else {
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1, BLUE);
+	//	DrawRectangleLinesEx(test2.getAABB(), 0.1, RED);
+	//}
+
+	//// point intersect test
+	//if (test.intersectPoint(worldPos)) {
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1, GREEN);
+	//}
+	//else {
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1, BLUE);
+	//}
+
+	Transform2D playerSprite = gameData.player.transform;
+	playerSprite.w = 1;
+	playerSprite.h = 2;
+	// move the sprite so that the bottom of the sprite matches the bottom of the collider
+	playerSprite.pos.y -= (playerSprite.h - gameData.player.transform.h) / 2;
+
+	DrawTexturePro(
+		assetManager.player,
+		{ 0,0, (float)assetManager.player.width, (float)assetManager.player.height },
+		playerSprite.getAABB(), // dest
+		{ 0,0 }, // origin (top-left corner)
+		0.0f, // rotation
+		WHITE // tint
+	);
+
+	DrawRectangleLinesEx(gameData.player.transform.getAABB(), 0.1, { 20, 101, 250, 120 }); // the collider
 
 	EndMode2D();
 

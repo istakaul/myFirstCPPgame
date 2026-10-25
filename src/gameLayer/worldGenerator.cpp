@@ -31,17 +31,24 @@ void generateWorld(GameMap &gameMap, int seed)
 	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
 	std::unique_ptr<FastNoiseSIMD> cavesNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
-	dirtNoiseGenrator->SetSeed(seed++);
-	cavesNoiseGenerator->SetSeed(seed++);
+	auto dirtNoiseGeneratorSetup = [&]() {
+		dirtNoiseGenrator->SetSeed(seed++);
+		dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+		dirtNoiseGenrator->SetFractalOctaves(6);
+		dirtNoiseGenrator->SetFractalGain(0.4f); // lower gain = sharper
+		dirtNoiseGenrator->SetFrequency(0.01f);
 
-	dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-	dirtNoiseGenrator->SetFractalOctaves(6);
-	dirtNoiseGenrator->SetFractalGain(0.4f); // lower gain = sharper
-	dirtNoiseGenrator->SetFrequency(0.01f);
+		};
 
-	cavesNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-	cavesNoiseGenerator->SetFractalOctaves(3);
-	cavesNoiseGenerator->SetFrequency(0.02f);
+	auto cavesNoiseGeneratorSetup = [&]() {
+		cavesNoiseGenerator->SetSeed(seed++);
+		cavesNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+		cavesNoiseGenerator->SetFractalOctaves(3);
+		cavesNoiseGenerator->SetFrequency(0.02f);
+		};
+	
+	dirtNoiseGeneratorSetup();
+	cavesNoiseGeneratorSetup();
 
 	float *dirtNoise = FastNoiseSIMD::GetEmptySet(w);
 	dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, w, 1, 1);
@@ -69,13 +76,85 @@ void generateWorld(GameMap &gameMap, int seed)
 	int timeToKeepDirectionStone = getRandomInt(rng, 5, 40);
 
 	int stoneHeight = 90;
+	int dirtHeight = 0;
+
+	// creates the basic world shape with stone
+	auto createStoneLayer = [&]()
+		{
+			timeToKeepDirectionStone--;
+			if (timeToKeepDirectionStone <= 0) {
+				timeToKeepDirectionStone = getRandomInt(rng, 5, 40);
+				directionStone = getRandomInt(rng, -2, 2);
+			}
+
+			if (directionStone == -1) {
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight--;
+				}
+			}
+			else if (directionStone == -2) {
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight--;
+				}
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight--;
+				}
+			}
+			else if (directionStone == 1) {
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight++;
+				}
+			}
+			else if (directionStone == 2) {
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight++;
+				}
+				if (getRandomChance(rng, 0.25)) {
+					stoneHeight++;
+				}
+			}
+
+			if (stoneHeight < 60) {
+				stoneHeight = 60;
+			}
+
+			if (stoneHeight > 120) {
+				stoneHeight = 120;
+			}
+		};
+
+	// changes the top few blocks to dirt
+	auto addDirtLayer = [&](int x) {
+			dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
+			dirtHeight = stoneHeight - dirtHeight;
+		};
+
+	// add an inverted triangular area inside the map
+	auto addDesertArea = [&](Block& b, int x, int y) {
+		int desertMid = (desertStart + desertEnd) / 2;
+		int deserthalfWidth = (desertEnd - desertStart) / 2;
+		int distanceFromDesertMid = std::abs(x - desertMid);
+
+		// This gives a value between 0 and 1, where 1 is at the center of the desert and 0 is at the edges
+		float desertDistance = 1.0f - (float)distanceFromDesertMid / deserthalfWidth;
+
+		int desertStoneStart = 10 + stoneHeight;
+		int desertStoneDepth = 20 + stoneHeight; // how deep the desert triangle goes
+
+		int triangleStoneY = desertStoneStart + desertDistance * desertStoneDepth;
+
+		if (y > triangleStoneY) {
+			b.type = Block::stone;
+		}
+	};
 
 	for (int x = 0; x < w; x++) {
 
 		bool inDesert = (x >= desertStart && x <= desertEnd);
 
-		int dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
-		dirtHeight = stoneHeight - dirtHeight;
+		createStoneLayer();
+
+		addDirtLayer(x);
 
 		int dirtType = Block::dirt;
 		int grassType = Block::grassBlock;
@@ -86,51 +165,6 @@ void generateWorld(GameMap &gameMap, int seed)
 			grassType = Block::sand;
 			stoneType = Block::sandStone;
 		}
-
-		/*----------Stone Code------------------------------*/
-		timeToKeepDirectionStone--;
-		if (timeToKeepDirectionStone <= 0) {
-			timeToKeepDirectionStone = getRandomInt(rng, 5, 40);
-			directionStone = getRandomInt(rng, -2, 2);
-		}
-
-		if (directionStone == -1) {
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight--;
-			}
-		}
-		else if (directionStone == -2) {
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight--;
-			}
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight--;
-			}
-		}
-		else if (directionStone == 1) {
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight++;
-			}
-		}
-		else if (directionStone == 2) {
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight++;
-			}
-			if (getRandomChance(rng, 0.25)) {
-				stoneHeight++;
-			}
-		}
-
-		if (stoneHeight < 60) {
-			stoneHeight = 60;
-		}
-
-		if (stoneHeight > 120) {
-			stoneHeight = 120;
-		}
-
-		/*------------------------ End of stone code ------------------------*/
-
 
 
 		for (int y = 0; y < h; y++) {
@@ -153,23 +187,8 @@ void generateWorld(GameMap &gameMap, int seed)
 					b.type = stoneType;
 				}
 			}
-
 			if (inDesert) {
-				int desertMid = (desertStart + desertEnd) / 2;
-				int deserthalfWidth = (desertEnd - desertStart) / 2;
-				int distanceFromDesertMid = std::abs(x - desertMid);
-
-				// This gives a value between 0 and 1, where 1 is at the center of the desert and 0 is at the edges
-				float desertDistance = 1.0f - (float)distanceFromDesertMid / deserthalfWidth;
-
-				int desertStoneStart = 10 + stoneHeight;
-				int desertStoneDepth = 20 + stoneHeight; // how deep the desert triangle goes
-
-				int triangleStoneY = desertStoneStart + desertDistance * desertStoneDepth;
-
-				if(y > triangleStoneY) {
-					b.type = Block::stone;
-				}
+				addDesertArea(b, x, y);
 			}
 
 			// bigger more interesting caves
@@ -186,97 +205,103 @@ void generateWorld(GameMap &gameMap, int seed)
 	FastNoiseSIMD::FreeNoiseSet(cavesNoise);
 
 #pragma region perlin worms
-	for (int i = 0; i < 20; i++) {
+	auto generatePerlinWorms = [&]() {
 
-		// pick a random starting point
-		// it's important for x and y to be floats
+		for (int i = 0; i < 20; i++) {
 
-		float x = getRandomInt(rng, 10, w - 10);
-		float y = getRandomInt(rng, 51, h - 10);
+			// pick a random starting point
+			// it's important for x and y to be floats
 
-		// Initial movement direction (-1 to 1 range)
-		float dirX = getRandomFloat(rng, -1, 1);
-		float dirY = getRandomFloat(rng, -1, 1);
+			float x = getRandomInt(rng, 10, w - 10);
+			float y = getRandomInt(rng, 51, h - 10);
 
-		int wormLength = getRandomInt(rng, 200, 700);
-		float radius = 2.5f;
+			// Initial movement direction (-1 to 1 range)
+			float dirX = getRandomFloat(rng, -1, 1);
+			float dirY = getRandomFloat(rng, -1, 1);
 
-		int changeDirectionTime = getRandomInt(rng, 5, 20);
+			int wormLength = getRandomInt(rng, 200, 700);
+			float radius = 2.5f;
 
-		for (int j = 0; j < wormLength; j++) {
-			// dig a circle around the current position
-			int intRadius = std::ceil(radius);
-			for (int ox = -intRadius; ox <= intRadius; ox++) {
-				for (int oy = -intRadius; oy <= intRadius; oy++) {
-					float distSq = ox * ox + oy * oy;
-					if (distSq <= radius * radius) {
-						int digX = x + ox;
-						int digY = y + ox;
+			int changeDirectionTime = getRandomInt(rng, 5, 20);
 
-						auto b = gameMap.getBlockSafe(digX, digY);
-						if (b) {
-							b->type = Block::air;
+			for (int j = 0; j < wormLength; j++) {
+				// dig a circle around the current position
+				int intRadius = std::ceil(radius);
+				for (int ox = -intRadius; ox <= intRadius; ox++) {
+					for (int oy = -intRadius; oy <= intRadius; oy++) {
+						float distSq = ox * ox + oy * oy;
+						if (distSq <= radius * radius) {
+							int digX = x + ox;
+							int digY = y + ox;
+
+							auto b = gameMap.getBlockSafe(digX, digY);
+							if (b) {
+								b->type = Block::air;
+							}
 						}
 					}
 				}
-			}
 
-			changeDirectionTime--;
-			if (changeDirectionTime <= 0) {
-				changeDirectionTime = getRandomInt(rng, 5, 20);
+				changeDirectionTime--;
+				if (changeDirectionTime <= 0) {
+					changeDirectionTime = getRandomInt(rng, 5, 20);
 
-				if (getRandomChance(rng, 0.7)) {
-					float keepFactor = 0.8;
+					if (getRandomChance(rng, 0.7)) {
+						float keepFactor = 0.8;
 
-					// big chance we keep a very similar direction
-					dirX = dirX * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
-					dirY = dirY * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
+						// big chance we keep a very similar direction
+						dirX = dirX * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
+						dirY = dirY * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
+					}
+					else {
+						float keepFactor = 0.2;
+
+						dirX = dirX * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
+						dirY = dirY * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
+
+					}
 				}
-				else {
-					float keepFactor = 0.2;
+				// Move forward
+				x += dirX * 1.5f;
+				y += dirY * 1.5f;
 
-					dirX = dirX * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
-					dirY = dirY * keepFactor + (getRandomFloat(rng, -1, 1)) * (1.f - keepFactor);
-
-				}
+				// Random radius wobble
+				radius += getRandomFloat(rng, -0.2, 0.2);
+				radius = std::clamp(radius, 2.2f, 8.5f);
 			}
-			// Move forward
-			x += dirX * 1.5f;
-			y += dirY * 1.5f;
-
-			// Random radius wobble
-			radius += getRandomFloat(rng, -0.2, 0.2);
-			radius = std::clamp(radius, 2.2f, 8.5f);
 		}
-	}
+	};
+	generatePerlinWorms();
 
 #pragma region fill trees
-	for (int x = 0; x < w; x++) {
-		if (getRandomChance(rng, 0.04)) {
-			for (int y = 0; y < h; y++) {
-				auto type = gameMap.getBlockUnsafe(x, y).type;
-				if (type == Block::air) {
-					continue;
-				}
+	auto generateTreeBiomes = [&]() {
+		for (int x = 0; x < w; x++) {
+			if (getRandomChance(rng, 0.04)) {
+				for (int y = 0; y < h; y++) {
+					auto type = gameMap.getBlockUnsafe(x, y).type;
+					if (type == Block::air) {
+						continue;
+					}
 
-				if (type == Block::grassBlock) {
-					//plant tree
-					Vector2 spawnPos{ float(x), float(y) };
+					if (type == Block::grassBlock) {
+						//plant tree
+						Vector2 spawnPos{ float(x), float(y) };
 
-					spawnPos.x -= treeStructure.w / 2;
-					spawnPos.y -= treeStructure.h;
+						spawnPos.x -= treeStructure.w / 2;
+						spawnPos.y -= treeStructure.h;
 
-					treeStructure.pasteIntoMap(gameMap, spawnPos);
+						treeStructure.pasteIntoMap(gameMap, spawnPos);
 
-					x += 3;
+						x += 3;
 
-					break;
-				}
-				else {
-					break;
+						break;
+					}
+					else {
+						break;
+					}
 				}
 			}
 		}
-	}
-
+	};
+	generateTreeBiomes();
 }

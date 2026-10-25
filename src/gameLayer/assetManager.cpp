@@ -7,4 +7,5 @@ void AssetManager::loadAll()
 	frame = LoadTexture(RESOURCES_PATH "frame.png");
 	treeTextures = LoadTexture(RESOURCES_PATH "treetextures.png");
 	wallBlockTextures = LoadTexture(RESOURCES_PATH "texturesWithBackgroundVersion.png");
+	player = LoadTexture(RESOURCES_PATH "player.png");
 }
