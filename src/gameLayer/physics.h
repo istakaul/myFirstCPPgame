@@ -1,6 +1,7 @@
 #pragma once
 #include <raylib.h>
 #include <raymath.h>
+#include <cmath>
 
 
 
@@ -143,6 +144,10 @@ struct Transform2D {
 	}
 };
 
+// forward declaration : We say that GameMap exists and then #include it in the physics.cpp file. This will decrease compilation time and also solve some weird declaration errors.
+// You can do forward declaration when you use a struct/class in a header file only as a reference/pointer.
+struct GameMap; 
+
 struct PhysicalEntity {
 	Transform2D transform;
 	Vector2 lastPosition = {};
@@ -150,6 +155,11 @@ struct PhysicalEntity {
 	// Velocity changes Position over time, and Acceleration changes Velocity over time
 	Vector2 velocity = {}; // the current speed the object is moving. It is a vector because velocity has also a direction
 	Vector2 acceleration = {}; // acceleration increases the velocity overtime instead of changing the position
+
+	bool upTouch = 0;
+	bool downTouch = 0;
+	bool leftTouch = 0;
+	bool rightTouch = 0;
 
 	void teleport(Vector2 pos) {
 		transform.pos = pos;
@@ -194,4 +204,11 @@ struct PhysicalEntity {
 	Vector2 &getPosition() {
 		return transform.pos;
 	}
+
+	// function to resolve the collisions
+	void resolveConstraints(GameMap &mapData);
+
+	void checkCollisionOnce(Vector2 &pos, GameMap &mapData);
+
+	Vector2 performCollisionOnOneAxis(GameMap &mapData, Vector2 pos, Vector2 delta);
 };

@@ -18,7 +18,7 @@
 
 struct GameData {
 	GameMap gameMap;
-	Camera2D camera;
+	Camera2D camera = {}; // Initialize camera to zero/default values
 
 	int creativeSelectedBlock = Block::dirt; // this represents the currently selected block
 
@@ -50,7 +50,7 @@ bool initGame()
 	gameData.camera.zoom = 100.f; // no zoom
 
 	// set the player position
-	gameData.player.teleport({ 20, 120 }); 
+	gameData.player.teleport({ 20, 60 }); 
 	
 	// set the player size
 	gameData.player.transform.w = 0.9f; // slightly less than a block
@@ -78,8 +78,9 @@ bool updateGame()
 
 
 #pragma region entities
-	gameData.player.applyGravity();
+	//gameData.player.applyGravity();
 	gameData.player.updateForces(deltaTime);
+	gameData.player.checkCollisionOnce(gameData.player.transform.pos, gameData.gameMap);
 	gameData.camera.target = gameData.player.getPosition();
 	gameData.player.updateFinal();
 #pragma endregion
