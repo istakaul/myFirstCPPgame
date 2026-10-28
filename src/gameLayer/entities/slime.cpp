@@ -3,13 +3,13 @@
 #include "helpers.h"
 #include <randomStuff.h>
 
-void Slime::render(AssetManager &assetManager)
+void Slime::render(AssetManager &assetManager) // rendering must be free of update stuff (animation etc)
 {
 	auto aabb = getRectangleForEntity(physics.transform, 1, 1);
 
 	DrawTexturePro(
 		assetManager.slime,
-		getTextureAtlas(0, 0, 32, 32),
+		getTextureAtlas(animation.positionX, animation.positionY, 32, 32),
 		aabb, //dest
 		{ 0,0 }, // origin (top-left corner)
 		0.0f, // rotation
@@ -41,6 +41,10 @@ void Slime::update(float deltaTime, std::ranlux24_base rng, Vector2 playerPositi
 
 	if (physics.downTouch) {
 		moveSpeed = 0;
+		animation.setAnimation(0); // staying
+	}
+	else {
+		animation.setAnimation(1); // in air
 	}
 
 	jumpTimer -= deltaTime;
@@ -75,5 +79,7 @@ void Slime::update(float deltaTime, std::ranlux24_base rng, Vector2 playerPositi
 	if (moveSpeed) {
 		getPosition().x += deltaTime * moveSpeed;
 	}
+
+	animation.update(deltaTime, 0.08, 7); // 7 frames lasting 0.08 seconds each
 }
  

@@ -3,6 +3,7 @@
 #include <physics.h>
 #include <raylib.h>
 #include <random>
+#include <entityAnimation.h>
 
 struct AssetManager;
 
@@ -11,6 +12,8 @@ struct Slime {
 		physics.transform.w = 0.8f;
 		physics.transform.h = 0.8f;
 	}
+
+	EntityAnimation animation;
 
 	PhysicalEntity physics;
 
