@@ -28,7 +28,7 @@ struct GameData {
 	Vector2 selectionEnd = {};
 	Structure copyStructure;
 
-	char saveName[100] = {};
+	char saveName[100] = {}; 
 
 	PhysicalEntity player;
 	Slime slime;
@@ -79,17 +79,19 @@ bool updateGame()
 	if(IsKeyDown(KEY_RIGHT)) gameData.player.getPosition().x += 7.f * deltaTime;
 	if(IsKeyDown(KEY_UP)) gameData.player.getPosition().y -= 7.f * deltaTime;
 	if(IsKeyDown(KEY_DOWN)) gameData.player.getPosition().y += 7.f * deltaTime;
+	if (IsKeyDown(KEY_SPACE)) gameData.player.jump(10);
 
 
 #pragma region entities
-	//gameData.player.applyGravity();
+	gameData.player.applyGravity();
 	gameData.player.updateForces(deltaTime);
 	gameData.player.resolveConstraints(gameData.gameMap);
 	gameData.camera.target = gameData.player.getPosition();
 	gameData.player.updateFinal();
 
 	// slime
-	gameData.slime.update(deltaTime);
+	std::ranlux24_base rng(std::random_device{}());
+	gameData.slime.update(deltaTime, rng, gameData.player.getPosition());
 	gameData.slime.physics.applyGravity();
 
 	gameData.slime.physics.updateForces(deltaTime);
@@ -223,36 +225,7 @@ bool updateGame()
 			{20, 101, 250, 145});
 
 	}
-
-	//Transform2D test;
-	//test.pos = { 20.5, 120.5 };
-	//test.w = 1;
-	//test.h = 1;
-
-	//Transform2D test2;
-	//test2.pos = worldPos;
-	//test2.w = 1;
-	//test2.h = 1;
-
-
-	//// transform vs transform intersect test
-	//if (test.intersectTransform(test2)) {
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1, GREEN);
-	//	DrawRectangleLinesEx(test2.getAABB(), 0.1, GREEN);
-	//}
-	//else {
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1, BLUE);
-	//	DrawRectangleLinesEx(test2.getAABB(), 0.1, RED);
-	//}
-
-	//// point intersect test
-	//if (test.intersectPoint(worldPos)) {
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1, GREEN);
-	//}
-	//else {
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1, BLUE);
-	//}
-
+	
 	gameData.slime.render(assetManager);
 
 	DrawTexturePro(
