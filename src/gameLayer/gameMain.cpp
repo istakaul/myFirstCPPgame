@@ -15,6 +15,7 @@
 #include <worldGenerator.h>
 #include <saveMap.h>
 #include <physics.h>
+#include <entities/slime.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -30,6 +31,7 @@ struct GameData {
 	char saveName[100] = {};
 
 	PhysicalEntity player;
+	Slime slime;
 
 } gameData;
 
@@ -56,6 +58,8 @@ bool initGame()
 	gameData.player.transform.w = 0.9f; // slightly less than a block
 	gameData.player.transform.h = 1.8f; // almost twice the block
 
+	gameData.slime.physics.teleport({ 18, 60 });
+
 	return true;
 }
 
@@ -80,9 +84,17 @@ bool updateGame()
 #pragma region entities
 	//gameData.player.applyGravity();
 	gameData.player.updateForces(deltaTime);
-	gameData.player.checkCollisionOnce(gameData.player.transform.pos, gameData.gameMap);
+	gameData.player.resolveConstraints(gameData.gameMap);
 	gameData.camera.target = gameData.player.getPosition();
 	gameData.player.updateFinal();
+
+	// slime
+	gameData.slime.update(deltaTime);
+	gameData.slime.physics.applyGravity();
+
+	gameData.slime.physics.updateForces(deltaTime);
+	gameData.slime.physics.resolveConstraints(gameData.gameMap);
+	gameData.slime.physics.updateFinal();
 #pragma endregion
 
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
@@ -241,16 +253,12 @@ bool updateGame()
 	//	DrawRectangleLinesEx(test.getAABB(), 0.1, BLUE);
 	//}
 
-	Transform2D playerSprite = gameData.player.transform;
-	playerSprite.w = 1;
-	playerSprite.h = 2;
-	// move the sprite so that the bottom of the sprite matches the bottom of the collider
-	playerSprite.pos.y -= (playerSprite.h - gameData.player.transform.h) / 2;
+	gameData.slime.render(assetManager);
 
 	DrawTexturePro(
 		assetManager.player,
 		{ 0,0, (float)assetManager.player.width, (float)assetManager.player.height },
-		playerSprite.getAABB(), // dest
+		getRectangleForEntity(gameData.player.transform, 1, 2), // dest
 		{ 0,0 }, // origin (top-left corner)
 		0.0f, // rotation
 		WHITE // tint
