@@ -16,12 +16,13 @@
 #include <saveMap.h>
 #include <physics.h>
 #include <entities/slime.h>
+#include <entityIdHolder.h>
 
 struct GameData {
 	GameMap gameMap;
 	Camera2D camera = {}; // Initialize camera to zero/default values
 
-	int creativeSelectedBlock = Block::dirt; // this represents the currently selected block
+	int creativeSelectedBlock = Block::air; // this represents the currently selected block
 
 	// These are map points where we select an item on the map
 	Vector2 selectionStart = {};
@@ -31,7 +32,7 @@ struct GameData {
 	char saveName[100] = {}; 
 
 	PhysicalEntity player;
-	Slime slime;
+	EntityHolder entities;
 
 } gameData;
 
@@ -40,6 +41,16 @@ AssetManager assetManager;
 static float CAMERA_SPEED = 50;
 
 bool isShowImgui = false;
+
+void spawnSlime(Vector2 position) {
+	Slime slime;
+
+	slime.physics.teleport(position);
+	
+	auto id = gameData.entities.idHolder.getEntityIdAndIncrement();
+
+	gameData.entities.entities[id] = slime;
+}
 
 bool initGame()
 {
@@ -58,7 +69,8 @@ bool initGame()
 	gameData.player.transform.w = 0.9f; // slightly less than a block
 	gameData.player.transform.h = 1.8f; // almost twice the block
 
-	gameData.slime.physics.teleport({ 18, 60 });
+	
+	spawnSlime({ 18, 60 });
 
 	return true;
 }
@@ -91,12 +103,15 @@ bool updateGame()
 
 	// slime
 	std::ranlux24_base rng(std::random_device{}());
-	gameData.slime.update(deltaTime, rng, gameData.player.getPosition());
-	gameData.slime.physics.applyGravity();
 
-	gameData.slime.physics.updateForces(deltaTime);
-	gameData.slime.physics.resolveConstraints(gameData.gameMap);
-	gameData.slime.physics.updateFinal();
+	// update all entities
+	for (auto &e : gameData.entities.entities) {
+		e.second.update(deltaTime, rng, gameData.player.getPosition());
+		e.second.physics.applyGravity();
+		e.second.physics.updateForces(deltaTime);
+		e.second.physics.resolveConstraints(gameData.gameMap);
+		e.second.physics.updateFinal();
+	}
 #pragma endregion
 
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
@@ -226,7 +241,10 @@ bool updateGame()
 
 	}
 	
-	gameData.slime.render(assetManager);
+	for (auto &e : gameData.entities.entities) {
+
+		e.second.render(assetManager);
+	}
 
 	DrawTexturePro(
 		assetManager.player,
@@ -303,6 +321,10 @@ void showImgui(bool isShowImgui)
 
 		ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
 		ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
+
+		if (ImGui::Button("Spawn Slime")) {
+			spawnSlime({ 18,20 });
+		}
 
 		if (ImGui::Button("Copy")) {
 			gameData.copyStructure.copyFromMap(gameData.gameMap,
