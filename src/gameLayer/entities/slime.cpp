@@ -17,7 +17,7 @@ void Slime::render(AssetManager &assetManager) // rendering must be free of upda
 	);
 }
 
-void Slime::update(float deltaTime, EntityUpdateData entityUpdateData)
+bool Slime::update(float deltaTime, EntityUpdateData entityUpdateData)
 {
 	changeStateTimer -= deltaTime;
 
@@ -81,5 +81,7 @@ void Slime::update(float deltaTime, EntityUpdateData entityUpdateData)
 	}
 
 	animation.update(deltaTime, 0.08, 7); // 7 frames lasting 0.08 seconds each
+
+	return true;
 }
  
