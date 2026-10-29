@@ -18,6 +18,7 @@
 #include <entities/slime.h>
 #include <entityIdHolder.h>
 #include <droppedItem.h>
+#include <player.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -32,7 +33,7 @@ struct GameData {
 
 	char saveName[100] = {}; 
 
-	PhysicalEntity player;
+	Player player;
 	EntityHolder entities;
 
 } gameData;
@@ -75,11 +76,11 @@ bool initGame()
 	gameData.camera.zoom = 100.f; // no zoom
 
 	// set the player position
-	gameData.player.teleport({ 20, 60 }); 
+	gameData.player.physics.teleport({ 20, 60 }); 
 	
 	// set the player size
-	gameData.player.transform.w = 0.9f; // slightly less than a block
-	gameData.player.transform.h = 1.8f; // almost twice the block
+	gameData.player.physics.transform.w = 0.9f; // slightly less than a block
+	gameData.player.physics.transform.h = 1.8f; // almost twice the block
 
 	
 	spawnSlime({ 18, 60 });
@@ -103,15 +104,24 @@ bool updateGame()
 	if(IsKeyDown(KEY_RIGHT)) gameData.player.getPosition().x += 7.f * deltaTime;
 	if(IsKeyDown(KEY_UP)) gameData.player.getPosition().y -= 7.f * deltaTime;
 	if(IsKeyDown(KEY_DOWN)) gameData.player.getPosition().y += 7.f * deltaTime;
-	if (IsKeyDown(KEY_SPACE)) gameData.player.jump(10);
+	if (IsKeyDown(KEY_SPACE)) gameData.player.physics.jump(10);
 
 
 #pragma region entities
-	gameData.player.applyGravity();
-	gameData.player.updateForces(deltaTime);
-	gameData.player.resolveConstraints(gameData.gameMap);
+
+	auto updateEntityPhysics = [&](Entity &entity, bool applyGravity = true) {
+
+		if (applyGravity) {
+			entity.physics.applyGravity();
+			entity.physics.updateForces(deltaTime);
+			entity.physics.resolveConstraints(gameData.gameMap);
+			entity.physics.updateFinal();
+		}
+	};
+
+	updateEntityPhysics(gameData.player, false);
+
 	gameData.camera.target = gameData.player.getPosition();
-	gameData.player.updateFinal();
 
 	// slime
 	std::ranlux24_base rng(std::random_device{}());
@@ -138,13 +148,13 @@ bool updateGame()
 		}
 		else {
 			// physics
-
-			it->second->update(deltaTime, updateData);
+			updateEntityPhysics(*it->second);
+/*			it->second->update(deltaTime, updateData);
 			it->second->physics.applyGravity();
 			it->second->physics.updateForces(deltaTime);
 			it->second->physics.resolveConstraints(gameData.gameMap);
 			it->second->physics.updateFinal();
-
+*/
 			++it;
 		}
 
@@ -286,13 +296,13 @@ bool updateGame()
 	DrawTexturePro(
 		assetManager.player,
 		{ 0,0, (float)assetManager.player.width, (float)assetManager.player.height },
-		getRectangleForEntity(gameData.player.transform, 1, 2), // dest
+		getRectangleForEntity(gameData.player.physics.transform, 1, 2), // dest
 		{ 0,0 }, // origin (top-left corner)
 		0.0f, // rotation
 		WHITE // tint
 	);
 
-	DrawRectangleLinesEx(gameData.player.transform.getAABB(), 0.1, { 20, 101, 250, 120 }); // the collider
+	DrawRectangleLinesEx(gameData.player.physics.transform.getAABB(), 0.1, { 20, 101, 250, 120 }); // the collider
 
 	EndMode2D();
 
