@@ -22,4 +22,6 @@ struct DroppedItem :public Entity {
 	bool update(float deltaTime, EntityUpdateData entityUpdateData) override;
 
 	int getEntityType() { return EntityType_DroppedItem; }
+
+	float getMaxLife() { return 1; }
 };

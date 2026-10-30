@@ -138,7 +138,7 @@ bool updateGame()
 
 		bool shouldKill = false;
 
-		if (!it->second->update(deltaTime, updateData)) {
+		if (!it->second->update(deltaTime, updateData) || it->second->life <=0) {
 			shouldKill = true;
 		}
 
@@ -372,6 +372,15 @@ void showImgui(bool isShowImgui)
 
 		ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
 		ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
+
+		if (ImGui::Button("Hurt a slime")) {
+			for (auto &e : gameData.entities.entities) {
+				if (e.second->getEntityType() == EntityType_Slime) {
+					e.second->life -= 3;
+					break;
+				}
+			}
+		}
 
 		if (ImGui::Button("Spawn Slime")) {
 			spawnSlime({ 18,20 });

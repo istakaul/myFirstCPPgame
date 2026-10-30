@@ -12,6 +12,8 @@ struct Slime : Entity {
 	Slime() {
 		physics.transform.w = 0.8f;
 		physics.transform.h = 0.8f;
+
+		life = getMaxLife();
 	}
 
 	EntityAnimation animation;
@@ -25,6 +27,8 @@ struct Slime : Entity {
 	bool update(float deltaTime, EntityUpdateData entityUpdateData) override;
 
 	int getEntityType() { return EntityType_Slime; }
+
+	float getMaxLife() { return 10; }
 
 	enum {
 		STATE_WANDERING = 0,
