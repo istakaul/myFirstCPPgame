@@ -9,4 +9,5 @@ void AssetManager::loadAll()
 	wallBlockTextures = LoadTexture(RESOURCES_PATH "texturesWithBackgroundVersion.png");
 	player = LoadTexture(RESOURCES_PATH "player.png");
 	slime = LoadTexture(RESOURCES_PATH "slime.png");
+	items = LoadTexture(RESOURCES_PATH "items.png");
 }

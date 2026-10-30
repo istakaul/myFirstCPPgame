@@ -111,6 +111,10 @@ struct Block {
 
 };
 
+//bool isCollidable(int type) {
+//	//.....
+//}
+
 struct TreeBlock {
 	enum {
 		trunkMiddle = 0,

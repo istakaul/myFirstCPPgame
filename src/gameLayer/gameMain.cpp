@@ -19,6 +19,7 @@
 #include <entityIdHolder.h>
 #include <droppedItem.h>
 #include <player.h>
+#include <items.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -337,7 +338,7 @@ void levelDesignInput(int blockX, int blockY)
 			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 			if (b) {
 				if (b->type) {
-					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, b->type);
+					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, Item::healthPotion);
 				}
 
 				*b = {};
