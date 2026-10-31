@@ -370,7 +370,7 @@ void levelDesignInput(int blockX, int blockY)
 			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 			if (b) {
 				if (b->type) {
-					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, Item::healthPotion);
+					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, b->type);
 				}
 
 				*b = {};
