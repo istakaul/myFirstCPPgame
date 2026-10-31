@@ -124,6 +124,38 @@ bool updateGame()
 
 	gameData.camera.target = gameData.player.getPosition();
 
+	// clamp camera (restrict between two values, so that the view doesn't get out of the map
+	{
+		float zoom = gameData.camera.zoom;
+
+		float screenWidth = GetScreenWidth();
+		float screenHeight = GetScreenHeight();
+
+		// half of the visible area (adjusted for zoom)
+		float halfViewWidth = (screenWidth * 0.5f) / zoom;
+		float halfViewHeight = (screenHeight * 0.5f) / zoom;
+
+		float minX = halfViewWidth;
+		float maxX = gameData.gameMap.w - halfViewWidth;
+		float minY = halfViewHeight;
+		float maxY = gameData.gameMap.h - halfViewHeight;
+
+		// if the map is smaller than the view (zoomed out a lot), we just set the camera to the center of the world
+		if (maxX < minX) {
+			gameData.camera.target.x = gameData.gameMap.w * 0.5f;
+		}
+		else {
+			gameData.camera.target.x = Clamp(gameData.camera.target.x, minX, maxX); // clamp : restrict between two given values.
+		}
+
+		if (maxY < minY) {
+			gameData.camera.target.y = gameData.gameMap.h * 0.5f;
+		}
+		else {
+			gameData.camera.target.y = Clamp(gameData.camera.target.y, minY, maxY);
+		}
+	}
+
 	// slime
 	std::ranlux24_base rng(std::random_device{}());
 
