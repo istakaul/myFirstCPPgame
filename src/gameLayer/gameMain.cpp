@@ -20,6 +20,8 @@
 #include <droppedItem.h>
 #include <player.h>
 #include <items.h>
+#include <audio.h>
+#include <settings.h>
 
 struct GameData {
 	GameMap gameMap;
@@ -68,6 +70,8 @@ void spawnDroppedItem(Vector2 position, int type) {
 
 bool initGame()
 {
+
+	Audio::init();
 	assetManager.loadAll();
 
 	generateWorld(gameData.gameMap, std::random_device{}());
@@ -91,6 +95,8 @@ bool initGame()
 
 bool updateGame()
 {
+	Audio::update();
+
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 1.f / 5) { deltaTime = 1.f / 5; } // limit deltaTime to a maximum of 1/5 seconds (200ms) to avoid large jumps
 
@@ -447,6 +453,22 @@ void showImgui(bool isShowImgui)
 		}
 
 		ImGui::Separator;
+
+		ImGui::SliderFloat("master volume", &getSettings().masterVolume, 0, 1);
+		ImGui::SliderFloat("sound volume", &getSettings().soundsVolume, 0, 1);
+		ImGui::SliderFloat("music volume", &getSettings().musicVolume, 0, 1);
+
+		if (ImGui::Button("Play sound")) {
+			Audio::playSound(Audio::placeBlock);
+		}
+
+		if (ImGui::Button("Play music forest")) {
+			Audio::playMusic(Audio::musicForest);
+		}
+
+		if (ImGui::Button("Play music desert")) {
+			Audio::playMusic(Audio::musicDesert);
+		}
 
 		for (int i = 0; i < Block::BLOCKS_COUNT; i++) {
 			auto atlas = getTextureAtlas(i, 0, 32, 32);
