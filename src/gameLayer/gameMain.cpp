@@ -22,10 +22,12 @@
 #include <items.h>
 #include <audio.h>
 #include <settings.h>
+#include <drawBackground.h>
 
 struct GameData {
 	GameMap gameMap;
 	Camera2D camera = {}; // Initialize camera to zero/default values
+	DrawBackground background;
 
 	int creativeSelectedBlock = Block::air; // this represents the currently selected block
 
@@ -214,6 +216,8 @@ bool updateGame()
 
 
 #pragma endregion
+
+	gameData.background.draw(deltaTime, assetManager, gameData.camera, { (float)gameData.gameMap.w, (float)gameData.gameMap.h });
 
 	BeginMode2D(gameData.camera);
 
