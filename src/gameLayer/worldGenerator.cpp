@@ -25,6 +25,9 @@ void generateWorld(GameMap &gameMap, int seed)
 		desertEnd = w;
 	}
 
+	gameMap.desertStart = desertStart;
+	gameMap.desertEnd = desertEnd;
+
 	Structure treeStructure;
 	loadBlockDataFromFile(treeStructure.mapData, treeStructure.w, treeStructure.h, RESOURCES_PATH "structures/tree.bin");
 

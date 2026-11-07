@@ -19,4 +19,7 @@ struct GameMap {
 	WallBlock &getWallBlockUnsafe(int x, int y);
 
 	WallBlock *getWallBlockSafe(int x, int y);
+
+	int desertStart = 0;
+	int desertEnd = 0;
 };

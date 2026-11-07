@@ -5,8 +5,15 @@
 
 void DrawBackground::draw(float deltaTime, AssetManager &assetManager, Camera2D camera, Vector2 mapSize)
 {
-	auto drawOneBackground = [&](float parallax, float opacity) {
+	auto drawOneBackground = [&](int type, float parallax, float opacity) {
 		Texture bg = assetManager.forestBG;
+
+		switch (type) {
+			case forest: bg = assetManager.forestBG; break;
+			case desert: bg = assetManager.desertBG; break;
+			case snow: bg = assetManager.snowBG; break;
+			case cave: bg = assetManager.caveBG; break;
+		}
 
 		int screenW = GetScreenWidth();
 		int screenH = GetScreenHeight();
@@ -63,6 +70,32 @@ void DrawBackground::draw(float deltaTime, AssetManager &assetManager, Camera2D 
 		DrawTexturePro(bg, src, dest, { 0,0 }, 0.0f, { 255,255,255,(unsigned char)(255 * opacity) });
 	};
 
-	drawOneBackground(0.3, 1);
+	// In currentBackgroundType now rests the new background that will replace the previous background (currentTransitionType)
+	// But the currentBackgroundType (new background) will be behind the old background (opacity will be 0)
+	// As transition time passes the opacity will go to 1 so the old background will fade out and the new background will be visible
+
+	drawOneBackground(currentBackgroundType ,0.3, 1);
+
+	// draw the transition on top
+	transitionTime -= deltaTime;
+	if (transitionTime > 0) {
+		float opacity = transitionTime;
+		if (opacity > 1) { opacity = 1; }
+		drawOneBackground(currentTransitionType, 0.3, opacity);
+	}
+}
+
+void DrawBackground::setBackground(int background)
+{
+	if (background != currentBackgroundType) {
+		if (transitionTime <= 0) {
+			transitionTime = 1;
+			currentTransitionType = currentBackgroundType;
+			currentBackgroundType = background;
+		}
+		else {
+			// we wait for the previous transition to finish first
+		}
+	}
 }
 
