@@ -45,7 +45,7 @@ struct GameData {
 
 AssetManager assetManager;
 
-static float CAMERA_SPEED = 50;
+//static float CAMERA_SPEED = 50;
 
 bool isShowImgui = false;
 
@@ -110,13 +110,58 @@ bool updateGame()
 
 	if (IsKeyPressed(KEY_F10)) { isShowImgui = !isShowImgui; }
 
-#pragma region camera movement
-	if(IsKeyDown(KEY_LEFT)) gameData.player.getPosition().x -= 7.f * deltaTime;
-	if(IsKeyDown(KEY_RIGHT)) gameData.player.getPosition().x += 7.f * deltaTime;
-	if(IsKeyDown(KEY_UP)) gameData.player.getPosition().y -= 7.f * deltaTime;
-	if(IsKeyDown(KEY_DOWN)) gameData.player.getPosition().y += 7.f * deltaTime;
-	if (IsKeyDown(KEY_SPACE)) gameData.player.physics.jump(10);
+#pragma region player movement
+	static float CAMERA_SPEED = 10;
+	static bool creative = false;
+	{
+		bool moving = 0;
+		bool falling = 0;
 
+		if (IsKeyDown(KEY_LEFT)) {
+			gameData.player.getPosition().x -= CAMERA_SPEED * GetFrameTime();
+			moving = true;
+			gameData.player.animations.movingLeft = true;
+		}
+
+		if (IsKeyDown(KEY_RIGHT)) {
+			gameData.player.getPosition().x += CAMERA_SPEED * GetFrameTime();
+			moving = true;
+			gameData.player.animations.movingLeft = false;
+		}
+
+		if (creative) {
+			if (IsKeyDown(KEY_UP)) {
+				gameData.player.getPosition().y -= CAMERA_SPEED * GetFrameTime();
+				moving = true;
+			}
+			if (IsKeyDown(KEY_DOWN)) {
+				gameData.player.getPosition().y += CAMERA_SPEED * GetFrameTime();
+				moving = true;
+			}
+		}
+
+		if (IsKeyDown(KEY_SPACE)) { gameData.player.physics.jump(12.0); }
+
+		if (gameData.player.physics.downTouch) {
+			falling = 0;
+		}
+		else {
+			falling = 1;
+		}
+
+		if (falling) {
+			gameData.player.animations.setAnimation(2);
+		}
+		else if (moving) {
+			gameData.player.animations.setAnimation(1);
+		}
+		else {
+			gameData.player.animations.setAnimation(0);
+		}
+
+		gameData.player.animations.update(deltaTime, 0.08, 7);
+	}
+#pragma endregion
 
 #pragma region entities
 
@@ -130,7 +175,7 @@ bool updateGame()
 		}
 	};
 
-	updateEntityPhysics(gameData.player, false);
+	updateEntityPhysics(gameData.player, !creative);
 
 	gameData.camera.target = gameData.player.getPosition();
 
@@ -354,85 +399,28 @@ bool updateGame()
 		e.second->render(assetManager);
 	}
 
-	DrawTexturePro(
-		assetManager.player,
-		{ 0,0, (float)assetManager.player.width, (float)assetManager.player.height },
-		getRectangleForEntity(gameData.player.physics.transform, 1, 2), // dest
-		{ 0,0 }, // origin (top-left corner)
-		0.0f, // rotation
-		WHITE // tint
-	);
+	gameData.player.render(assetManager);
+	//DrawTexturePro(
+	//	assetManager.player,
+	//	{ 0,0, (float)assetManager.player.width, (float)assetManager.player.height },
+	//	getRectangleForEntity(gameData.player.physics.transform, 1, 2), // dest
+	//	{ 0,0 }, // origin (top-left corner)
+	//	0.0f, // rotation
+	//	WHITE // tint
+	//);
 
 	DrawRectangleLinesEx(gameData.player.physics.transform.getAABB(), 0.1, { 20, 101, 250, 120 }); // the collider
 
 	EndMode2D();
 
-	showImgui(isShowImgui);
-
-	DrawFPS(10,10);
-
-	return true;
-}
-
-void levelDesignInput(int blockX, int blockY)
-{
-	// Selection of map objects
-	if (isShowImgui) {
-		if (IsKeyPressed(KEY_ONE)) { gameData.selectionStart = Vector2{ float(blockX), float(blockY) }; }
-		if (IsKeyPressed(KEY_TWO)) { gameData.selectionEnd = Vector2{ float(blockX), float(blockY) }; }
-		if (IsKeyPressed(KEY_THREE)) { 
-			gameData.copyStructure.pasteIntoMap(gameData.gameMap, Vector2{ float(blockX), float(blockY) });
-		}
-
-		// Make sure start is smaller than end
-		if (gameData.selectionStart.x > gameData.selectionEnd.x) {
-			std::swap(gameData.selectionStart.x, gameData.selectionEnd.x);
-		}
-		if (gameData.selectionStart.y > gameData.selectionEnd.y) {
-			std::swap(gameData.selectionStart.y, gameData.selectionEnd.y);
-		}
-	}
-
-	if (!isShowImgui) {
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-			if (b) {
-				if (b->type) {
-					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, Item::healthPotion);
-				}
-
-				*b = {};
-			}
-		}
-
-		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-			if (b) {
-				b->type = gameData.creativeSelectedBlock;
-			}
-		}
-	}
-	else { // when assets inventory opened
-		if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-			// Copy selected block on map
-			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-			if (b) {
-				gameData.creativeSelectedBlock = b->type;
-			}
-		}
-	}
-
-
-}
-
-void showImgui(bool isShowImgui)
-{
+	//showImgui(isShowImgui, creative);
 	if (isShowImgui) {
 
 		ImGui::Begin("Game Control");
 
 		ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 1, 150);
 		ImGui::SliderFloat("Camera speed:", &CAMERA_SPEED, 5, 30);
+		ImGui::Checkbox("Creative:", &creative);
 
 		if (ImGui::Button("Hurt a slime")) {
 			for (auto &e : gameData.entities.entities) {
@@ -458,7 +446,7 @@ void showImgui(bool isShowImgui)
 			std::string path = RESOURCES_PATH "structures/";
 			path += gameData.saveName;
 			path += ".bin";
-			
+
 			saveBlockDataToFile(gameData.copyStructure.mapData,
 				gameData.copyStructure.w, gameData.copyStructure.h,
 				path.c_str());
@@ -522,6 +510,59 @@ void showImgui(bool isShowImgui)
 		ImGui::InputInt("Select Block", &gameData.creativeSelectedBlock);
 
 		ImGui::End();
+	}
+
+	DrawFPS(10,10);
+
+	return true;
+}
+
+void levelDesignInput(int blockX, int blockY)
+{
+	// Selection of map objects
+	if (isShowImgui) {
+		if (IsKeyPressed(KEY_ONE)) { gameData.selectionStart = Vector2{ float(blockX), float(blockY) }; }
+		if (IsKeyPressed(KEY_TWO)) { gameData.selectionEnd = Vector2{ float(blockX), float(blockY) }; }
+		if (IsKeyPressed(KEY_THREE)) { 
+			gameData.copyStructure.pasteIntoMap(gameData.gameMap, Vector2{ float(blockX), float(blockY) });
+		}
+
+		// Make sure start is smaller than end
+		if (gameData.selectionStart.x > gameData.selectionEnd.x) {
+			std::swap(gameData.selectionStart.x, gameData.selectionEnd.x);
+		}
+		if (gameData.selectionStart.y > gameData.selectionEnd.y) {
+			std::swap(gameData.selectionStart.y, gameData.selectionEnd.y);
+		}
+	}
+
+	if (!isShowImgui) {
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				if (b->type) {
+					spawnDroppedItem({ (float)blockX + 0.5f, (float)blockY + 0.5f }, Item::healthPotion);
+				}
+
+				*b = {};
+			}
+		}
+
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				b->type = gameData.creativeSelectedBlock;
+			}
+		}
+	}
+	else { // when assets inventory opened
+		if (IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+			// Copy selected block on map
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) {
+				gameData.creativeSelectedBlock = b->type;
+			}
+		}
 	}
 }
 

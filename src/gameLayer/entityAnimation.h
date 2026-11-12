@@ -7,6 +7,7 @@ struct EntityAnimation {
 	int positionY = 0; // this will play the default animation (it the first row of the spritesheet). 1 is the second row, 2 the third etc.
 
 	float timer = 0;
+	bool movingLeft = 0;
 
 	void update(float deltaTime, float frameDuration, int framesCount) {
 		

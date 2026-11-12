@@ -1,8 +1,10 @@
 #include "helpers.h"
 
-Rectangle getTextureAtlas(int x, int y, int cellSizePixelsX, int cellSizePixelsY)
+Rectangle getTextureAtlas(int x, int y, int cellSizePixelsX, int cellSizePixelsY, bool flipX)
 {
-	return Rectangle{ (float)x * cellSizePixelsX, (float)y * cellSizePixelsY, (float)cellSizePixelsX, (float)cellSizePixelsY };
+	float sizeX = cellSizePixelsX;
+	if (flipX) { sizeX *= -1; }
+	return Rectangle{ (float)x * cellSizePixelsX, (float)y * cellSizePixelsY, (float)sizeX, (float)cellSizePixelsY };
 }
 
 Rectangle getRectangleForEntity(Transform2D transform, float textureW, float textureH)
