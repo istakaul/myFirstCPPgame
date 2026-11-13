@@ -18,3 +18,9 @@ Rectangle getRectangleForEntity(Transform2D transform, float textureW, float tex
 
 	return rezult.getAABB();
 }
+
+Rectangle flipTextureAtlasX(Rectangle r)
+{
+	r.width = -r.width;
+	return r;
+}
